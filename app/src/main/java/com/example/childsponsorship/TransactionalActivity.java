@@ -103,8 +103,9 @@ if (getIntent()!= null){
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("User");
         databaseReference.child(user.getUserId()).updateChildren(result);
 
-            databaseReference = FirebaseDatabase.getInstance().getReference("Department")
-                    .child(type).child(user.getDepartment())
+        DatabaseReference   databaseReference1 = FirebaseDatabase.getInstance().getReference("Department");
+                    databaseReference1.child(type).child(user.getDepartment()).child(user.getUserId())
+                    .updateChildren(result);
 
     }
 
