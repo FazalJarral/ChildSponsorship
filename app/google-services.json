@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "15657193063",
+    "firebase_url": "https://child-sponsorship.firebaseio.com",
+    "project_id": "child-sponsorship",
+    "storage_bucket": "child-sponsorship.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:15657193063:android:0c095cd786e8c6e2",
+        "android_client_info": {
+          "package_name": "com.example.childsponsorship"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "15657193063-0nviv1nplh1j6qu0opv5pnlobagqsick.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.childsponsorship",
+            "certificate_hash": "c56da685921ba44bbdc59b417f4f2eeb6ea00b8f"
+          }
+        },
+        {
+          "client_id": "15657193063-81mgpftmbb6i1c5vkr2dc2h77n1cfs2o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCrNi1DQGBx03aigjN8aAOYowCh2xSAOQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "15657193063-81mgpftmbb6i1c5vkr2dc2h77n1cfs2o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
