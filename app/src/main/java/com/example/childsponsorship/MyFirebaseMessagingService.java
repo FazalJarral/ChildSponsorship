@@ -22,6 +22,8 @@ import static android.content.ContentValues.TAG;
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
     String title;
     String message;
+    TokenChange tokenChange;
+
     public MyFirebaseMessagingService() {
     }
 
@@ -75,6 +77,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     private void sendRegistrationToServer(String token) {
-
+        tokenChange.onTokenChanged(token);
     }
 }

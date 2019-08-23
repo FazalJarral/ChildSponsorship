@@ -27,13 +27,14 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 
-public class TransactionalActivity extends AppCompatActivity {
+public class TransactionalActivity extends AppCompatActivity implements TokenChange {
     FirebaseUser firebaseUser;
     FirebaseAuth mAuth;
     DatabaseReference myRef;
     FragmentManager manager;
     FragmentTransaction transaction;
     User user;
+    User currentUser;
     String usertoken;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +43,7 @@ public class TransactionalActivity extends AppCompatActivity {
        mAuth  = FirebaseAuth.getInstance();
        firebaseUser = mAuth.getCurrentUser();
         myRef = FirebaseDatabase.getInstance().getReference("User");
-
+        currentUser = user;
 if (getIntent()!= null){
     usertoken = getIntent().getStringExtra("token");
 }
@@ -61,11 +62,14 @@ if (getIntent()!= null){
 
 
                     if(user.getUserId().contentEquals(firebaseUser.getUid())){
+                        currentUser = user;
                         updateDatabase(user , usertoken);
                     }
 
                     if (user.getUserId().contentEquals(firebaseUser.getUid()) && user.isSponser()) {
                         Log.e("type", user.isSponser() + "");
+                        currentUser = user;
+
                         Fragment fragment = new SponsorFrag();
                         Bundle bundle = new Bundle();
                         bundle.putSerializable("user" , user);
@@ -74,6 +78,8 @@ if (getIntent()!= null){
                         updateFragment(fragment);
                     }
                     if (user.getUserId().contentEquals(firebaseUser.getUid()) && !(user.isSponser())) {
+                        currentUser = user;
+
                         updateFragment(new CollectorFrag());
                     }
                 }
@@ -130,5 +136,10 @@ if (getIntent()!= null){
         transaction = manager.beginTransaction();
         transaction.replace(R.id.frame, fragment);
         transaction.commit();
+    }
+
+    @Override
+    public void onTokenChanged(String token) {
+        updateDatabase(currentUser , token);
     }
 }
