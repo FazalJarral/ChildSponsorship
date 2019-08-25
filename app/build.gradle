@@ -35,5 +35,7 @@ dependencies {
 
     // Add the SDK for Firebase Cloud Messaging
     implementation 'com.google.firebase:firebase-messaging:20.0.0'
+
+    implementation("com.squareup.okhttp3:okhttp:4.1.0")
 }
 apply plugin: 'com.google.gms.google-services'

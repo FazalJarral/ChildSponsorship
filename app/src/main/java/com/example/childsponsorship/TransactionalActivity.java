@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -17,6 +18,8 @@ import com.example.childsponsorship.Fragment.CollectorFrag;
 import com.example.childsponsorship.Fragment.LoginFrag;
 import com.example.childsponsorship.Fragment.SponsorFrag;
 import com.example.childsponsorship.bean.User;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -61,13 +64,12 @@ if (getIntent()!= null){
                     Log.e("val", user.getUserId() + firebaseUser.getUid());
 
 
-                    if(user.getUserId().contentEquals(firebaseUser.getUid())){
-                        currentUser = user;
-                        updateDatabase(user , usertoken);
-                    }
+
 
                     if (user.getUserId().contentEquals(firebaseUser.getUid()) && user.isSponser()) {
                         Log.e("type", user.isSponser() + "");
+                        updateDatabase(user , usertoken);
+
                         currentUser = user;
 
                         Fragment fragment = new SponsorFrag();
@@ -79,8 +81,13 @@ if (getIntent()!= null){
                     }
                     if (user.getUserId().contentEquals(firebaseUser.getUid()) && !(user.isSponser())) {
                         currentUser = user;
+                        updateDatabase(user , usertoken);
 
-                        updateFragment(new CollectorFrag());
+                        Fragment fragment = new CollectorFrag();
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable("user" , user);
+                        fragment.setArguments(bundle);
+                        updateFragment(fragment);
                     }
                 }
             }
@@ -94,24 +101,56 @@ if (getIntent()!= null){
 
     }
 
-    private void updateDatabase(User user , String token) {
+    private void updateDatabase(final User user , String token) {
         user.setToken(token);
-        String type ;
+        final String type ;
         if (user.isSponser()){
             type = "Sponsor";
         }
         else type = "Collector";
         Log.e("user" , user.toString());
 
-        HashMap<String , Object> result = new HashMap<>();
+        final HashMap<String , Object> result = new HashMap<>();
         result.put("token" , token);
+       Thread thread = new Thread(new Runnable() {
+           @Override
+           public void run() {
+               Log.e("token" , "updating");
+               DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("User");
+               databaseReference.child(user.getUserId()).updateChildren(result).addOnCompleteListener(new OnCompleteListener<Void>() {
+                   @Override
+                   public void onComplete(@NonNull Task<Void> task) {
+                       if (task.isSuccessful()){
+                           Log.e("token", "onComplete: " + "succesfuly updated" );
+                       }
+                       else
+                       {
+                           Log.e("token", "onComplete: " + "failed" + task.getException().getMessage() );
 
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("User");
-        databaseReference.child(user.getUserId()).updateChildren(result);
+                       }
+                   }
+               });
 
-        DatabaseReference   databaseReference1 = FirebaseDatabase.getInstance().getReference("Department");
-                    databaseReference1.child(type).child(user.getDepartment()).child(user.getUserId())
-                    .updateChildren(result);
+               DatabaseReference   databaseReference1 = FirebaseDatabase.getInstance().getReference("Department");
+               databaseReference1.child(type).child(user.getDepartment()).child(user.getUserId())
+                       .updateChildren(result).addOnCompleteListener(new OnCompleteListener<Void>() {
+                   @Override
+                   public void onComplete(@NonNull Task<Void> task) {
+                       if (task.isSuccessful()){
+                           Log.e("token", "onComplete: " + "succesfuly updated" );
+                       }
+                       else
+                       {
+                           Log.e("token", "onComplete: " + "failed" + task.getException().getMessage() );
+
+                       }
+                   }
+               });
+           }
+       });
+
+       thread.run();
+
 
     }
 
@@ -126,7 +165,10 @@ if (getIntent()!= null){
         switch (item.getItemId()){
             case R.id.logout:
                 mAuth.signOut();
-                updateFragment(new LoginFrag());
+                manager = getSupportFragmentManager();
+                transaction = manager.beginTransaction();
+                transaction.replace(R.id.frame, new LoginFrag());
+                transaction.commit();
 
         }
         return super.onOptionsItemSelected(item);

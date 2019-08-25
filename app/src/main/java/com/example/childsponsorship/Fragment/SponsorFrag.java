@@ -1,7 +1,9 @@
 package com.example.childsponsorship.Fragment;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Xml;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -13,6 +15,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,20 +30,35 @@ import com.example.childsponsorship.bean.Transaction;
 import com.example.childsponsorship.bean.User;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static android.content.ContentValues.TAG;
 import static android.content.Context.LAYOUT_INFLATER_SERVICE;
 
 public class SponsorFrag extends Fragment implements View.OnClickListener {
+    private static final String SERVER_KEY = "AIzaSyDlhjTIKvoKLbIwTY42odkP6-vmnQihBXE";
     FloatingActionButton floatingActionButton;
     DatabaseReference databaseReference;
     RecyclerView recyclerView;
@@ -61,18 +79,44 @@ public class SponsorFrag extends Fragment implements View.OnClickListener {
         recyclerView = v.findViewById(R.id.recyclerViewSponsor);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         read_data = new ArrayList<>();
-
         transactionAdapter = new TransactionAdapter(getContext() , read_data);
         recyclerView.setAdapter(transactionAdapter);
-        loadtorecyclerview();
         if (getArguments()!=null){
+
             user = (User) getArguments().getSerializable("user");
         }
+
+        loadtorecyclerview();
+
         firebase_upload_data = new ArrayList<>();
         readFromDatabase();
 
         floatingActionButton.setOnClickListener(this);
         return v;
+    }
+
+    private void loadCurrentUser() {
+        DatabaseReference myRef;
+        final FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        myRef = FirebaseDatabase.getInstance().getReference("User");
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+                    User temp_user = snapshot.getValue(User.class);
+                    if (temp_user.getUserId().contentEquals(firebaseUser.getUid())){
+                        user = temp_user;
+
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
     }
 
     @Override
@@ -166,23 +210,32 @@ public class SponsorFrag extends Fragment implements View.OnClickListener {
 
                 //value published firebase
                 Log.e("amount" , amount);
-                databaseReference = FirebaseDatabase.getInstance().getReference("Transaction");
-                String key = databaseReference.push().getKey();
-                databaseReference.child(key).setValue(transaction_submitted);
-Log.e("key" , "Loading to Firebase");
+                databaseReference = FirebaseDatabase.getInstance().getReference("Transaction")
+                .child(user.getDepartment()).child("Pending");
+                databaseReference.child(transaction_submitted.getKey()).setValue(transaction_submitted);
+
+                Log.e("key" , "Loading to Firebase");
 
                 read_data.clear();
                 transactionAdapter.notifyDataSetChanged();
+           //     sendNotification(collector.getToken());
 
                 popupWindow.dismiss();
             }
         });
     }
 
+
+
+
+
+
     private void loadtorecyclerview() {
 
         Log.e("key" , "In loading");
-        databaseReference  = FirebaseDatabase.getInstance().getReference("Transaction");
+        databaseReference  = FirebaseDatabase.getInstance().getReference("Transaction")
+                .child(user.getDepartment())
+        .child("Pending");
 
 
         databaseReference.addValueEventListener(new ValueEventListener() {
@@ -190,7 +243,7 @@ Log.e("key" , "Loading to Firebase");
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for(DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     readTransaction = snapshot.getValue(Transaction.class);
-                    if (readTransaction.getSponsor_id().contentEquals(user.getUserId().toString())) {
+                    if (readTransaction.getSponsor_id().contentEquals(user.getUserId())) {
                       read_data.add(readTransaction);
                       Log.e("log" , readTransaction.toString());
                     }
@@ -220,6 +273,8 @@ Log.e("key" , "Loading to Firebase");
         transaction_submitted.setSponsor_name(user.getName());
         transaction_submitted.setAmount(amount);
         transaction_submitted.setPublished_at(format);
+        transaction_submitted.setStatus("Pending");
+        transaction_submitted.setKey(databaseReference.push().getKey());
         firebase_upload_data.add(transaction_submitted);
     }
 }

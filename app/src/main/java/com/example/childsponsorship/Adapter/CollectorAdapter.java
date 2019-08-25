@@ -12,8 +12,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.childsponsorship.R;
 import com.example.childsponsorship.bean.Transaction;
+import com.example.childsponsorship.bean.User;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class CollectorAdapter extends RecyclerView.Adapter<CollectorAdapter.ViewHolder> {
     Context context;
@@ -34,12 +38,42 @@ public class CollectorAdapter extends RecyclerView.Adapter<CollectorAdapter.View
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
     holder.amount.setText(data.get(position).getAmount());
   //  holder.published_at.setText(data.get(position));
     holder.sender.setText(data.get(position).getSponsor_name());
     holder.published_at.setText(data.get(position).getPublished_at());
 
+    holder.accepted.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Transaction transaction = data.get(position);
+          transaction.setStatus("Accepted");
+            HashMap<String , Object> map = new HashMap<>();
+            map.put("status" , transaction.getStatus());
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Transaction")
+                    .child(transaction.getDepartment()).child("Pending").child(transaction.getKey());
+            databaseReference.updateChildren(map);
+
+            data.remove(position);
+        }
+    });
+
+    holder.rejected.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Transaction transaction = data.get(position);
+            transaction.setStatus("Rejected");
+
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Transaction")
+                    .child(transaction.getDepartment()).child("Rejected").child(transaction.getKey());
+            databaseReference.setValue(transaction);
+            data.remove(position);
+            databaseReference =FirebaseDatabase.getInstance().getReference("Transaction")
+                    .child(transaction.getDepartment()).child("Pending").child(transaction.getKey());
+            databaseReference.removeValue();
+        }
+    });
 
     }
 

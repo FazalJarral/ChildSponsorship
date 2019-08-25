@@ -12,6 +12,7 @@ String department;
 String published_at;
 String status;
 String collector_token;
+String key;
 
     public Transaction() {
     }
@@ -25,6 +26,14 @@ String collector_token;
         this.department = department;
         this.published_at = published_at;
         this.status = status;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public String getCollector_token() {

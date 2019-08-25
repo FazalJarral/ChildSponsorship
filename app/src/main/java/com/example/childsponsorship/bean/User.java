@@ -74,6 +74,6 @@ public class User implements Serializable {
     @NonNull
     @Override
     public String toString() {
-        return name + " " + token;
+        return name ;
     }
 }
