@@ -82,13 +82,12 @@ public class CollectorAdapter extends RecyclerView.Adapter<CollectorAdapter.View
             Transaction transaction = data.get(position);
             transaction.setStatus("Rejected");
 
-            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Transaction")
-                    .child(transaction.getDepartment()).child("Rejected").child(transaction.getKey());
-            databaseReference.setValue(transaction);
+            HashMap<String , Object> result = new HashMap<>();
+            result.put("status" , transaction.getStatus());
             data.remove(position);
-            databaseReference =FirebaseDatabase.getInstance().getReference("Transaction")
+         DatabaseReference databaseReference =FirebaseDatabase.getInstance().getReference("Transaction")
                     .child(transaction.getDepartment()).child("Pending").child(transaction.getKey());
-            databaseReference.removeValue();
+            databaseReference.updateChildren(result);
             String message = "Your Transaction Was Not Recieved.";
             prepareNotification(transaction.getSponsor_token() , message );
         }

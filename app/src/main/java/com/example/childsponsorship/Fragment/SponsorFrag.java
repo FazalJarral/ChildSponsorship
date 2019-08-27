@@ -92,29 +92,6 @@ public class SponsorFrag extends Fragment implements View.OnClickListener {
         return v;
     }
 
-    private void loadCurrentUser() {
-        DatabaseReference myRef;
-        final FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        myRef = FirebaseDatabase.getInstance().getReference("User");
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    User temp_user = snapshot.getValue(User.class);
-                    if (temp_user.getUserId().contentEquals(firebaseUser.getUid())){
-                        user = temp_user;
-
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-    }
 
     @Override
     public void onClick(View v) {
@@ -275,14 +252,20 @@ requestQueue.add(request);
         databaseReference  = FirebaseDatabase.getInstance().getReference("Transaction")
                 .child(user.getDepartment())
         .child("Pending");
+        read_data.clear();
+        transactionAdapter.notifyDataSetChanged();
 
 
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (read_data.size() > 0){
+                    read_data.clear();
+                }
                 for(DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     readTransaction = snapshot.getValue(Transaction.class);
                     if (readTransaction.getSponsor_id().contentEquals(user.getUserId())) {
+
                       read_data.add(readTransaction);
                       Log.e("log" , readTransaction.toString());
                     }

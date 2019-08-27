@@ -178,7 +178,7 @@ if (getIntent()!= null){
         manager = getSupportFragmentManager();
         transaction = manager.beginTransaction();
         transaction.replace(R.id.frame, fragment);
-        transaction.commit();
+        transaction.commitAllowingStateLoss();
     }
 
     @Override
