@@ -17,6 +17,9 @@ import androidx.core.app.NotificationCompat;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.util.Map;
+import java.util.Random;
+
 import static android.content.ContentValues.TAG;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
@@ -29,12 +32,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        super.onMessageReceived(remoteMessage);
-        title = remoteMessage.getNotification().getTitle();
-        message = remoteMessage.getNotification().getBody();
+
+        title = remoteMessage.getData().get("title");
+        message = remoteMessage.getData().get("body");
+        Log.e("message" , title + " " + message + "  " + remoteMessage.toString());
         sendNotification(message , title);
 
     }
+
     private void sendNotification(String messageBody , String title) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -48,6 +53,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         .setSmallIcon(R.drawable.common_google_signin_btn_text_dark_focused)
                         .setContentTitle(title)
                         .setContentText(messageBody)
+                        .setSubText(messageBody)
                         .setAutoCancel(true)
                         .setSound(defaultSoundUri)
                         .setContentIntent(pendingIntent);
@@ -63,7 +69,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             notificationManager.createNotificationChannel(channel);
         }
 
-        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+        notificationManager.notify(new Random().nextInt() /* ID of notification */, notificationBuilder.build());
     }
 
     @Override

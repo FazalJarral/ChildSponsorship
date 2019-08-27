@@ -13,7 +13,7 @@ String published_at;
 String status;
 String collector_token;
 String key;
-
+String sponsor_token;
     public Transaction() {
     }
 
@@ -26,6 +26,14 @@ String key;
         this.department = department;
         this.published_at = published_at;
         this.status = status;
+    }
+
+    public String getSponsor_token() {
+        return sponsor_token;
+    }
+
+    public void setSponsor_token(String sponsor_token) {
+        this.sponsor_token = sponsor_token;
     }
 
     public String getKey() {

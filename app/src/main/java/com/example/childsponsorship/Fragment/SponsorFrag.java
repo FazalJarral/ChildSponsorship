@@ -1,21 +1,17 @@
 package com.example.childsponsorship.Fragment;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.Xml;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +19,13 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.childsponsorship.Adapter.SpinnerAdapter;
 import com.example.childsponsorship.Adapter.TransactionAdapter;
 import com.example.childsponsorship.R;
@@ -37,28 +40,20 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.messaging.FirebaseMessaging;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
-import static android.content.ContentValues.TAG;
 import static android.content.Context.LAYOUT_INFLATER_SERVICE;
 
 public class SponsorFrag extends Fragment implements View.OnClickListener {
-    private static final String SERVER_KEY = "AIzaSyDlhjTIKvoKLbIwTY42odkP6-vmnQihBXE";
+    private static final String SERVER_KEY = "AAAAA6U9zmc:APA91bECOiT_VxbJESSTGNfQeJrJz7IHbtpqucfNakTHc9avFjhSWGesJfPceETyqvsTC6YcwoszJJrFo9lFy2IGw4BanzA8iqXNU6Pif6zRQ3ko_tExGedcaNwB9WeC7XQilN7gfNio";
     FloatingActionButton floatingActionButton;
     DatabaseReference databaseReference;
     RecyclerView recyclerView;
@@ -68,7 +63,8 @@ public class SponsorFrag extends Fragment implements View.OnClickListener {
     ArrayList<User> collector_data;
     ArrayList<Transaction> firebase_upload_data;
     ArrayList<Transaction> read_data;
-
+    String FCM_API = "https://fcm.googleapis.com/fcm/send";
+    RequestQueue requestQueue;
     Transaction transaction_submitted;
     Transaction readTransaction;
     @Nullable
@@ -81,6 +77,7 @@ public class SponsorFrag extends Fragment implements View.OnClickListener {
         read_data = new ArrayList<>();
         transactionAdapter = new TransactionAdapter(getContext() , read_data);
         recyclerView.setAdapter(transactionAdapter);
+        requestQueue = Volley.newRequestQueue(getContext());
         if (getArguments()!=null){
 
             user = (User) getArguments().getSerializable("user");
@@ -218,16 +215,58 @@ public class SponsorFrag extends Fragment implements View.OnClickListener {
 
                 read_data.clear();
                 transactionAdapter.notifyDataSetChanged();
-           //     sendNotification(collector.getToken());
+               prepareNotification(collector.getToken());
 
                 popupWindow.dismiss();
             }
         });
     }
 
+    private void prepareNotification(String token) {
+        JSONObject notfication = new JSONObject();
+        JSONObject notficationBody = new JSONObject();
+        try {
+            notficationBody.put("title", "You have recieved payment");
+            notficationBody.put("body",user.getName() + " has handed over "+ transaction_submitted.getAmount());
+            notfication.put("to" , token);
+            notfication.put("data", notficationBody);
+            notfication.put("notification" , notficationBody);
 
+        }
+        catch (Exception e){
+            Log.e("Exception Notification", e.getMessage());
+        }
+        sendNotification(notfication);
+    }
 
+    private void sendNotification(JSONObject notfication) {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST , FCM_API, notfication,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                    Log.e("Response Success" , response.toString());
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("Response Error" , error.toString());
 
+                    }
+
+                }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                String contenttype = "application/json";
+               HashMap<String , String> param = new HashMap();
+               param.put("Authorization", "key=" + SERVER_KEY);
+               param.put("Content-Type" , contenttype);
+               return param;
+            }
+        };
+
+requestQueue.add(request);
+    }
 
 
     private void loadtorecyclerview() {
@@ -275,6 +314,8 @@ public class SponsorFrag extends Fragment implements View.OnClickListener {
         transaction_submitted.setPublished_at(format);
         transaction_submitted.setStatus("Pending");
         transaction_submitted.setKey(databaseReference.push().getKey());
+        transaction_submitted.setSponsor_token(user.getToken());
+        transaction_submitted.setCollector_token(collector.getToken());
         firebase_upload_data.add(transaction_submitted);
     }
 }

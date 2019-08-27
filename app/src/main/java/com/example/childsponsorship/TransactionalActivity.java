@@ -66,7 +66,7 @@ if (getIntent()!= null){
 
 
 
-                    if (user.getUserId().contentEquals(firebaseUser.getUid()) && user.isSponser()) {
+                    if ((user.getUserId().contentEquals(firebaseUser.getUid())) && user.isSponser()) {
                         Log.e("type", user.isSponser() + "");
                         updateDatabase(user , usertoken);
 
@@ -79,7 +79,7 @@ if (getIntent()!= null){
 
                         updateFragment(fragment);
                     }
-                    if (user.getUserId().contentEquals(firebaseUser.getUid()) && !(user.isSponser())) {
+                    if ((user.getUserId().contentEquals(firebaseUser.getUid())) && !(user.isSponser())) {
                         currentUser = user;
                         updateDatabase(user , usertoken);
 
@@ -122,6 +122,7 @@ if (getIntent()!= null){
                    public void onComplete(@NonNull Task<Void> task) {
                        if (task.isSuccessful()){
                            Log.e("token", "onComplete: " + "succesfuly updated" );
+                        //   Log.e("assigned_token" , user.getToken());
                        }
                        else
                        {
@@ -182,6 +183,7 @@ if (getIntent()!= null){
 
     @Override
     public void onTokenChanged(String token) {
+        Log.e("token_changed" , token);
         updateDatabase(currentUser , token);
     }
 }
